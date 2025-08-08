@@ -1,15 +1,22 @@
 package org.board.member.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.board.global.exceptions.BadRequestException;
 import org.board.global.libs.Utils;
+import org.board.member.entities.Member;
+import org.board.member.jwt.TokenService;
+import org.board.member.libs.MemberUtil;
 import org.board.member.services.JoinService;
 import org.board.member.validators.JoinValidator;
+import org.board.member.validators.TokenValidator;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +28,9 @@ public class MemberController {
 
     private final JoinValidator joinValidator;
     private final JoinService joinService;
+    private final TokenValidator tokenValidator;
+    private final TokenService tokenService;
+    private final MemberUtil memberUtil;
     private final Utils utils;
 
     // 회원 가입
@@ -44,8 +54,34 @@ public class MemberController {
      *
      * @return
      */
+    @Operation(summary = "회원 인증 처리", description = "이메일과 비밀번호로 인증한 후 회원전용 요청을 보낼 수 있는 토큰(JWT)을 발급")
+    @Parameters({
+            @Parameter(name = "email", required = true, description = "이메일"),
+            @Parameter(name = "password", required = true, description = "비밀번호")
+    })
+    @ApiResponse(responseCode = "200", description = "인증 성공시 토큰(JWT)발급")
     @PostMapping("/token")
-    public String token() {
+    public String token(@Valid @RequestBody RequestToken form, Errors errors) {
 
+        tokenValidator.validate(form, errors);
+
+        if (errors.hasErrors()) {
+            throw new BadRequestException(utils.getErrorMessages(errors));
+        }
+
+        return tokenService.create(form.getEmail());
+    }
+
+
+    /**
+     * 로그인 회원 정보 출력
+     *
+     */
+    @Operation(summary = "로그인한 상태인 회원 정보를 조회", method = "GET")
+    @ApiResponse(responseCode = "200")
+    @GetMapping // GET /api/v1/member
+    @PreAuthorize("isAuthenticated()")
+    public Member myInfo() {
+        return memberUtil.getMember();
     }
 }

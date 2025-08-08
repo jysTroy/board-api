@@ -18,10 +18,10 @@ spring:
   # JPA 설정
   jpa:
     properties:
-        hibernate:
-          show_sql: true
-          format_sql: true
-          use_sql_comments: true
+      hibernate:
+        show_sql: true
+        format_sql: true
+        use_sql_comments: true
     hibernate:
       ddlAuto: ${ddl.auto}
 
@@ -54,12 +54,13 @@ springdoc:
   swagger-ui:
     operations-sorter: alpha
     tags-sorter: alpha
-    path: /swagger-ui.html
+    path: /api-docs.html
     disable-swagger-default-url: true
     doc-expansion: none
   paths-to-match:
     - /api/v1/**
-# JWT 설정
+
+  # JWT 설정
 member:
   jwt:
     secret: ${jwt.secret}
